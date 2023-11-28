@@ -2,6 +2,7 @@ const { Router } = require('express')
 const ntt = require('../controllers/ntt')
 const router = Router()
 
+router.get('/test', ntt.testTemplate)
 router.get('/audio/topcalls', ntt.topCalls)
 router.get('/audio/all', ntt.audioList)
 router.get('/audio/:year', ntt.recordingsForYear)
