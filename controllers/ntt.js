@@ -1,34 +1,6 @@
 const { formatSQL, pool } = require('../db/connection')
 
-async function executeSql(sql) {
-  let result
-  
-  try {
-    result = await pool.promise().query(sql)
-  } catch (err) {
-    console.log(err)
-  } finally {
-    return result
-  }
-}
 
-async function createEndpoint(input) {
-  let results, output
-  let paging = {
-    pagingData: setPagingData(input.request)
-  }
-
-  try {
-    results = await executeSql(input.SQL)
-    paging.results = results[0]
-    output = formatOutput(paging)
-  } catch (error) {
-    output = { function: "createEndpoint", resource: input.endpoint, error: error.message }
-    console.log(output)
-  } finally {
-    return output
-  }
-}
 
 async function testTemplate(req, res) {
   let endpointData = {
@@ -76,87 +48,135 @@ const audioList = async (req, res) => {
   } else {
     res.json(endpoint)
   }
-
 }
 
 const recordingNumber = async (req, res) => {
-  try {
-    SQL=`SELECT * FROM ntt_recordings WHERE objid = ?`
-    SQL = formatSQL(SQL, req.params.id)
-    rows = await executeSql(SQL)
-    results = rows[0]
-    res.json(results)
-  } catch(error) {
-    res.status(500).json({ error: error.message })
-    console.log(error)
+  let SQL=`SELECT * FROM ntt_recordings WHERE objid = ?`
+  SQL = formatSQL(SQL, req.params.id)
+  let endpointData = {
+    endpoint: "/audio/:id",
+    SQL,
+    request: req
   }
+
+  // try {
+  //   rows = await executeSql(SQL)
+  //   results = rows[0]
+  //   res.json(results)
+  // } catch(error) {
+  //   res.status(500).json({ error: error.message })
+  //   console.log(error)
+  // }
+  let endpoint = await createEndpoint(endpointData)
+  
+  if (endpoint.error) {
+    res.status(500).json(endpoint)
+  } else {
+    res.json(endpoint)
+  }  
 }
 
 async function allRecordingRegions(req, res) {
-  let SQL, results, output
+  // let SQL, results, output
+  // let paging = {
+  //   pagingData: setPagingData(req)
+  // }
 
-  let paging = {
-    pagingData: setPagingData(req)
-  }
-
-  SQL = `SELECT * FROM ntt_recording_regions WHERE recording_id = ? ORDER BY recording_id`
+  let SQL = `SELECT * FROM ntt_recording_regions WHERE recording_id = ? ORDER BY recording_id`
   SQL = formatSQL(SQL, [req.params.id])
 
-  try {
-    results = await executeSql(SQL)
-    paging.results = results[0]
-    output = formatOutput(paging)
-    res.json(output)    
-  } catch (error) {
-    res.status(500).json({ error: error.message })
-    console.log(error)
+  let endpointData = {
+    endpoint: "/audio/:id/regions",
+    SQL,
+    request: req
   }
 
+  // try {
+  //   results = await executeSql(SQL)
+  //   paging.results = results[0]
+  //   output = formatOutput(paging)
+  //   res.json(output)    
+  // } catch (error) {
+  //   res.status(500).json({ error: error.message })
+  //   console.log(error)
+  // }
+  let endpoint = await createEndpoint(endpointData)
+  
+  if (endpoint.error) {
+    res.status(500).json(endpoint)
+  } else {
+    res.json(endpoint)
+  }  
 }
 
 async function recordingRegion(req, res) {
-  let SQL, results
-
-  SQL = `SELECT * FROM ntt_recording_regions WHERE objid = ?`
+  // let SQL, results
+  let SQL = `SELECT * FROM ntt_recording_regions WHERE objid = ?`
   SQL = formatSQL(SQL, [req.params.regionId])
-  try {
-    results = await executeSql(SQL)
-    res.status(200).json(results[0])
-  } catch (error) {
-    res.status(500).json({error: error.message})
-    console.log(error)
+
+  let endpointData = {
+    endpoint: "/audio/region/:regionId",
+    SQL,
+    request: req
   }
+
+  // try {
+  //   results = await executeSql(SQL)
+  //   res.status(200).json(results[0])
+  // } catch (error) {
+  //   res.status(500).json({error: error.message})
+  //   console.log(error)
+  // }
+  let endpoint = await createEndpoint(endpointData)
+  
+  if (endpoint.error) {
+    res.status(500).json(endpoint)
+  } else {
+    res.json(endpoint)
+  }    
 }
 
 async function recordingsForYear(req, res) {
-  let SQL, results, output
+  // let SQL, results, output
 
-  let paging = {
-    pagingData: setPagingData(req)
-  }
+  // let paging = {
+  //   pagingData: setPagingData(req)
+  // }
 
-  SQL = 'SELECT * FROM ntt_recordings WHERE recording_date like ?'
+  let SQL = 'SELECT * FROM ntt_recordings WHERE recording_date like ?'
   SQL = formatSQL(SQL, [`%${req.params.year}%`])
-
-  try {
-    results = await executeSql(SQL)
-    paging.results = results[0]
-    output = formatOutput(paging)
-    res.json(output)    
-  } catch(error) {
-    res.status(500).json({error: error.message})
-    console.log(error)
+  let endpointData = {
+    endpoint: "/audio/:year",
+    SQL,
+    request: req
   }
+
+  // try {
+  //   results = await executeSql(SQL)
+  //   paging.results = results[0]
+  //   output = formatOutput(paging)
+  //   res.json(output)    
+  // } catch(error) {
+  //   res.status(500).json({error: error.message})
+  //   console.log(error)
+  // }
+  let endpoint = await createEndpoint(endpointData)
+  
+  if (endpoint.error) {
+    res.status(500).json(endpoint)
+  } else {
+    res.json(endpoint)
+  }  
 }
 
 async function regionsForYear(req, res) {
-  let SQL, results, output
+  // let SQL, results, output
 
-  let paging = {
-    pagingData: setPagingData(req)
-  }
+  // let paging = {
+  //   pagingData: setPagingData(req)
+  // }
 
-  SQL = `SELECT 
+  let SQL = `SELECT 
     objid,
     recording_id,
     recording_info,
@@ -173,36 +193,43 @@ async function regionsForYear(req, res) {
     recording_id IN (SELECT objid FROM ntt_recordings WHERE recording_date like ?)`
   
   SQL = formatSQL(SQL, [`%${req.params.year}%`])
-
-  try {
-    results = await executeSql(SQL)
-    paging.results = results[0]
-    output = formatOutput(paging)
-    res.json(output)    
-  } catch(error) {
-    res.status(500).json({ error: error.message})
-    console.log(error)
+  let endpointData = {
+    endpoint: "/audio/regions/:year",
+    SQL,
+    request: req
   }
+
+  // try {
+  //   results = await executeSql(SQL)
+  //   paging.results = results[0]
+  //   output = formatOutput(paging)
+  //   res.json(output)    
+  // } catch(error) {
+  //   res.status(500).json({ error: error.message})
+  //   console.log(error)
+  // }
+
+  let endpoint = await createEndpoint(endpointData)
+  
+  if (endpoint.error) {
+    res.status(500).json(endpoint)
+  } else {
+    res.json(endpoint)
+  }  
 }
 
 async function callersForYear(req, res) {
-  let SQL, results, output
+  // let SQL, results, output
 
-  let paging = {
-    pagingData: setPagingData(req)
-  }
+  // let paging = {
+  //   pagingData: setPagingData(req)
+  // }
 
-  SQL = `SELECT 
-    objid,
-    recording_id,
-    recording_info,
-    description,
-    subject,
-    detail1,
-    detail2,
-    start_time,
-    end_time,
-    end_time_post
+  let SQL = `SELECT 
+    objid, recording_id,
+    recording_info, description,
+    subject, detail1, detail2,
+    start_time, end_time, end_time_post
   FROM 
     ntt_recording_regions 
   WHERE 
@@ -210,25 +237,37 @@ async function callersForYear(req, res) {
   AND
     description like 'Caller%'`
   SQL = formatSQL(SQL, [`%${req.params.year}%`])
-  console.log(SQL)
-  try {
-    results = await executeSql(SQL)
-    paging.results = results[0]
-    output = formatOutput(paging)
-    res.json(output)    
-  } catch(error) {
-    res.status(500).json({error: error.message})
+  let endpointData = {
+    endpoint: "/audio/callers/:year",
+    SQL,
+    request: req
+  }
+
+  // try {
+  //   results = await executeSql(SQL)
+  //   paging.results = results[0]
+  //   output = formatOutput(paging)
+  //   res.json(output)    
+  // } catch(error) {
+  //   res.status(500).json({error: error.message})
+  // }
+  let endpoint = await createEndpoint(endpointData)
+  
+  if (endpoint.error) {
+    res.status(500).json(endpoint)
+  } else {
+    res.json(endpoint)
   }
 }
 
 async function readingsForYear(req, res) {
-  let SQL, results, output
+  // let SQL, results, output
 
-  let paging = {
-    pagingData: setPagingData(req)
-  }
+  // let paging = {
+  //   pagingData: setPagingData(req)
+  // }
 
-  SQL = `SELECT 
+  let SQL = `SELECT 
     objid,
     recording_id,
     recording_info,
@@ -246,25 +285,38 @@ async function readingsForYear(req, res) {
   AND
     description like 'Read%'`
   SQL = formatSQL(SQL, [`%${req.params.year}%`])
-  console.log(SQL)
-  try {
-    results = await executeSql(SQL)
-    paging.results = results[0]
-    output = formatOutput(paging)
-    res.json(output)    
-  } catch(error) {
-    res.status(500).json({error: error.message})
+  let endpointData = {
+    endpoint: "/audio/readings/:year",
+    SQL,
+    request: req
+  }
+
+  // try {
+  //   results = await executeSql(SQL)
+  //   paging.results = results[0]
+  //   output = formatOutput(paging)
+  //   res.json(output)    
+  // } catch(error) {
+  //   res.status(500).json({error: error.message})
+  // }
+
+  let endpoint = await createEndpoint(endpointData)
+
+  if (endpoint.error) {
+    res.status(500).json(endpoint)
+  } else {
+    res.json(endpoint)
   }
 }
 
 async function lecturesForYear(req, res) {
-  let SQL, results, output
+  // let SQL, results, output
 
-  let paging = {
-    pagingData: setPagingData(req)
-  }
+  // let paging = {
+  //   pagingData: setPagingData(req)
+  // }
 
-  SQL = `SELECT 
+  let SQL = `SELECT 
     objid,
     recording_id,
     recording_info,
@@ -282,26 +334,37 @@ async function lecturesForYear(req, res) {
   AND
     description like 'Lect%'`
   SQL = formatSQL(SQL, [`%${req.params.year}%`])
+  let endpointData = {
+    endpoint: "/audio/lectures/:year",
+    SQL,
+    request: req
+  }
 
-  try {
-    results = await executeSql(SQL)
-    paging.results = results[0]
-    output = formatOutput(paging)
-    res.json(output)  
-  } catch(error) {
-    res.status(500).json({error: error.message})
+  // try {
+  //   results = await executeSql(SQL)
+  //   paging.results = results[0]
+  //   output = formatOutput(paging)
+  //   res.json(output)  
+  // } catch(error) {
+  //   res.status(500).json({error: error.message})
+  // }
+  let endpoint = await createEndpoint(endpointData)
+
+  if (endpoint.error) {
+    res.status(500).json(endpoint)
+  } else {
+    res.json(endpoint)
   }
 }
 
 async function topCalls(req, res) {
-  let SQL, results, output
+  // let SQL, results, output
 
-  let paging = {
-    pagingData: setPagingData(req)
-  }
+  // let paging = {
+  //   pagingData: setPagingData(req)
+  // }
 
-
-  SQL = ` SELECT 
+  let SQL = ` SELECT 
     objid,
     recording_id,
     recording_info,
@@ -318,18 +381,38 @@ async function topCalls(req, res) {
     recording_id IN (SELECT objid FROM ntt_recordings WHERE top_call = 1)
   AND (description like 'Caller%' OR description like 'Lecture%' OR description like 'Reading%')  
   `
-  try {
-    results = await executeSql(SQL)
-    paging.results = results[0]
-    output = formatOutput(paging)
+  let endpointData = {
+    endpoint: "/audio/topcalls",
+    SQL,
+    request: req
+  }
 
-    // res.json(results[0])
-    res.json(output)
-  } catch(error) {
-    res.status(500).json({error: error.message})
-    console.log(error)
+  // try {
+  //   results = await executeSql(SQL)
+  //   paging.results = results[0]
+  //   output = formatOutput(paging)
+
+  //   // res.json(results[0])
+  //   res.json(output)
+  // } catch(error) {
+  //   res.status(500).json({error: error.message})
+  //   console.log(error)
+  // }
+  let endpoint = await createEndpoint(endpointData)
+
+  if (endpoint.error) {
+    res.status(500).json(endpoint)
+  } else {
+    res.json(endpoint)
   }
 }
+
+/* Internal Utility Functions 
+  setPagingData(input)
+  formatOutput(input)
+  executeSql(sql)
+  createEndpoint(input)
+*/
 
 function setPagingData(input) {
   let pages, limit
@@ -385,6 +468,36 @@ function formatOutput(input) {
   }
 
   return data
+}
+
+async function executeSql(sql) {
+  let result
+  
+  try {
+    result = await pool.promise().query(sql)
+  } catch (err) {
+    console.log(err)
+  } finally {
+    return result
+  }
+}
+
+async function createEndpoint(input) {
+  let results, output
+  let paging = {
+    pagingData: setPagingData(input.request)
+  }
+
+  try {
+    results = await executeSql(input.SQL)
+    paging.results = results[0]
+    output = formatOutput(paging)
+  } catch (error) {
+    output = { function: "createEndpoint", resource: input.endpoint, error: error.message }
+    console.log(output)
+  } finally {
+    return output
+  }
 }
 
 module.exports = {
