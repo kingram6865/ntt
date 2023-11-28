@@ -12,55 +12,56 @@ async function executeSql(sql) {
   }
 }
 
+async function createEndpoint(input) {
+  let results, output
+
+  let paging = {
+    pagingData: setPagingData(input.request)
+  }
+
+  
+  try {
+    results = await executeSql(input.SQL)
+    paging.results = results[0]
+    output = formatOutput(paging.results)
+    console.log(output)
+    // return output
+    // res.json(output)
+  } catch (error) {
+    output = { resource: input.endpoint, error: error.message }
+    console.log(output)
+  } finally {
+    return output
+  }
+}
+
+async function testTemplate(req, res) {
+  let endpointData = {
+    endpoint: "/test",
+    SQL: "show tables",
+    request: req
+  }
+
+  let endpoint = createEndpoint(endpointData)
+  if (endpoint.error) {
+    res.status(500).json(endpoint)
+  } else {
+    res.json(endpoint)
+  }
+}
+
 const audioList = async (req, res) => {
-  let rows, results, output
+  let SQL, results, output
 
   let paging = {
     pagingData: setPagingData(req)
   }
-  // let pagingData = setPagingData(req)
-
-  // let inputPages = pagingData.totalPages
-  // let inputlimit = pagingData.recordlimit
-  // let protocol = pagingData.protocol
-  // let host = pagingData.host
-  // let baseUrl = pagingData.baseUrl
-  // let path = pagingData.path
-
-
-  // const pageMax = 50
-  // const page = (inputPages) ? parseInt(inputPages) : 1
-  // const limit = (inputlimit > pageMax) ? parseInt(inputlimit) : pageMax
-  // const startIndex = (page - 1) * limit
-  // const endIndex = page * limit
 
   try {
     SQL=`SELECT * FROM ntt_recordings`
     results = await executeSql(SQL)
     paging.results = results[0]
-    // results = rows[0]
     output = formatOutput(paging)
-
-    // let data = {
-    //   "Total Results": results.length,
-    //   "Results per page": `${limit} - Max ${pageMax} results per page`,
-    //   next: "",
-    //   previous: "",
-    //   pages: Math.ceil(results.length/limit),
-    //   results: results.slice(startIndex, endIndex)
-    // }
-
-    // if (endIndex < results.length) {
-    //   // data.next = `${req.protocol}://${req.get('Host')}${req.baseUrl}${req.path}?page=${page + 1}&limit=${limit}`
-    //   data.next = `${protocol}://${host}${baseUrl}${path}?page=${page + 1}&limit=${limit}`
-    // }
-
-    // if (startIndex > 0) {
-    //   // data.previous = `${req.protocol}://${req.get('Host')}${req.baseUrl}${req.path}?page=${page - 1}&limit=${limit}`
-    //   data.previous = `${protocol}://${host}${baseUrl}${path}?page=${page - 1}&limit=${limit}`
-    // }
-
-    // res.json(data)
     res.json(output)
   } catch (error) {
     res.status(500).json({ error: error.message })
@@ -82,22 +83,20 @@ const recordingNumber = async (req, res) => {
 }
 
 async function allRecordingRegions(req, res) {
-  let SQL, results
-  let inputPages = req.query.page
-  let inputlimit = req.query.limit
-  let protocol = req.protocol
-  let host = req.get('Host')
-  let baseUrl = req.baseUrl
-  let path = req.path  
+  let SQL, results, output
 
-
+  let paging = {
+    pagingData: setPagingData(req)
+  }
 
   SQL = `SELECT * FROM ntt_recording_regions WHERE recording_id = ? ORDER BY recording_id`
   SQL = formatSQL(SQL, [req.params.id])
 
   try {
     results = await executeSql(SQL)
-    res.json(results[0])
+    paging.results = results[0]
+    output = formatOutput(paging)
+    res.json(output)    
   } catch (error) {
     res.status(500).json({ error: error.message })
     console.log(error)
@@ -120,21 +119,20 @@ async function recordingRegion(req, res) {
 }
 
 async function recordingsForYear(req, res) {
-  let SQL, results
-  let inputPages = req.query.page
-  let inputlimit = req.query.limit
-  let protocol = req.protocol
-  let host = req.get('Host')
-  let baseUrl = req.baseUrl
-  let path = req.path
+  let SQL, results, output
+
+  let paging = {
+    pagingData: setPagingData(req)
+  }
 
   SQL = 'SELECT * FROM ntt_recordings WHERE recording_date like ?'
   SQL = formatSQL(SQL, [`%${req.params.year}%`])
-  console.log(SQL)
 
   try {
     results = await executeSql(SQL)
-    res.status(200).json(results[0])    
+    paging.results = results[0]
+    output = formatOutput(paging)
+    res.json(output)    
   } catch(error) {
     res.status(500).json({error: error.message})
     console.log(error)
@@ -142,7 +140,12 @@ async function recordingsForYear(req, res) {
 }
 
 async function regionsForYear(req, res) {
-  let SQL, results
+  let SQL, results, output
+
+  let paging = {
+    pagingData: setPagingData(req)
+  }
+
   SQL = `SELECT 
     objid,
     recording_id,
@@ -160,11 +163,12 @@ async function regionsForYear(req, res) {
     recording_id IN (SELECT objid FROM ntt_recordings WHERE recording_date like ?)`
   
   SQL = formatSQL(SQL, [`%${req.params.year}%`])
-  console.log(SQL)
 
   try {
     results = await executeSql(SQL)
-    res.status(200).json(results[0])
+    paging.results = results[0]
+    output = formatOutput(paging)
+    res.json(output)    
   } catch(error) {
     res.status(500).json({ error: error.message})
     console.log(error)
@@ -172,7 +176,12 @@ async function regionsForYear(req, res) {
 }
 
 async function callersForYear(req, res) {
-  let SQL, results
+  let SQL, results, output
+
+  let paging = {
+    pagingData: setPagingData(req)
+  }
+
   SQL = `SELECT 
     objid,
     recording_id,
@@ -194,14 +203,21 @@ async function callersForYear(req, res) {
   console.log(SQL)
   try {
     results = await executeSql(SQL)
-    res.status(200).json(results[0])
+    paging.results = results[0]
+    output = formatOutput(paging)
+    res.json(output)    
   } catch(error) {
     res.status(500).json({error: error.message})
   }
 }
 
 async function readingsForYear(req, res) {
-  let SQL, results
+  let SQL, results, output
+
+  let paging = {
+    pagingData: setPagingData(req)
+  }
+
   SQL = `SELECT 
     objid,
     recording_id,
@@ -223,14 +239,21 @@ async function readingsForYear(req, res) {
   console.log(SQL)
   try {
     results = await executeSql(SQL)
-    res.status(200).json(results[0])
+    paging.results = results[0]
+    output = formatOutput(paging)
+    res.json(output)    
   } catch(error) {
     res.status(500).json({error: error.message})
   }
 }
 
 async function lecturesForYear(req, res) {
-  let SQL, results
+  let SQL, results, output
+
+  let paging = {
+    pagingData: setPagingData(req)
+  }
+
   SQL = `SELECT 
     objid,
     recording_id,
@@ -249,10 +272,12 @@ async function lecturesForYear(req, res) {
   AND
     description like 'Lect%'`
   SQL = formatSQL(SQL, [`%${req.params.year}%`])
-  console.log(SQL)
+
   try {
     results = await executeSql(SQL)
-    res.json(results[0])
+    paging.results = results[0]
+    output = formatOutput(paging)
+    res.json(output)  
   } catch(error) {
     res.status(500).json({error: error.message})
   }
@@ -298,8 +323,8 @@ async function topCalls(req, res) {
 
 function setPagingData(input) {
   return {
-    totalPages: input.query.page,
-    recordlimit: input.query.limit,
+    totalPages: input.query.page || 1,
+    recordlimit: input.query.limit || 50,
     protocol: input.protocol,
     host: input.get('Host'),
     baseUrl: input.baseUrl,
@@ -351,5 +376,6 @@ module.exports = {
   callersForYear,
   readingsForYear,
   lecturesForYear,
-  topCalls
+  topCalls,
+  testTemplate
 }
