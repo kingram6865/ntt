@@ -19,22 +19,6 @@ async function testTemplate(req, res) {
 }
 
 const audioList = async (req, res) => {
-  // let SQL, results, output
-
-  // let paging = {
-  //   pagingData: setPagingData(req)
-  // }
-
-  // try {
-  //   SQL=`SELECT * FROM ntt_recordings`
-  //   results = await executeSql(SQL)
-  //   paging.results = results[0]
-  //   output = formatOutput(paging)
-  //   res.json(output)
-  // } catch (error) {
-  //   res.status(500).json({ error: error.message })
-  //   console.log(error)
-  // }
   let endpointData = {
     endpoint: "/audio/all",
     SQL: "SELECT * FROM ntt_recordings",
@@ -186,7 +170,9 @@ async function regionsForYear(req, res) {
     detail2,
     start_time,
     end_time,
-    end_time_post
+    end_time_post,
+    file_name,
+    file_location
   FROM 
     ntt_recording_regions 
   WHERE 
@@ -229,7 +215,8 @@ async function callersForYear(req, res) {
     objid, recording_id,
     recording_info, description,
     subject, detail1, detail2,
-    start_time, end_time, end_time_post
+    start_time, end_time, end_time_post,
+    file_name, file_location
   FROM 
     ntt_recording_regions 
   WHERE 
@@ -277,7 +264,9 @@ async function readingsForYear(req, res) {
     detail2,
     start_time,
     end_time,
-    end_time_post
+    end_time_post,
+    file_name,
+    file_location
   FROM 
     ntt_recording_regions 
   WHERE 
@@ -326,7 +315,9 @@ async function lecturesForYear(req, res) {
     detail2,
     start_time,
     end_time,
-    end_time_post
+    end_time_post,
+    file_name,
+    file_location
   FROM 
     ntt_recording_regions 
   WHERE 
@@ -374,7 +365,9 @@ async function topCalls(req, res) {
     detail2,
     start_time,
     end_time,
-    end_time_post
+    end_time_post,
+    file_name,
+    file_location
   FROM 
     ntt_recording_regions 
   WHERE 
