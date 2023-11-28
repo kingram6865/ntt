@@ -1,4 +1,7 @@
 node_modules/
 .env
 sample_code*
-logs
+logs/access.log
+logs/app.log
+logs/errors.log
+logs/
