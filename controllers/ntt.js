@@ -13,48 +13,55 @@ async function executeSql(sql) {
 }
 
 const audioList = async (req, res) => {
-  let rows, results
-  let pagingData = setPagingData(req)
+  let rows, results, output
 
-  let inputPages = pagingData.totalPages
-  let inputlimit = pagingData.recordlimit
-  let protocol = pagingData.protocol
-  let host = pagingData.host
-  let baseUrl = pagingData.baseUrl
-  let path = pagingData.path
+  let paging = {
+    pagingData: setPagingData(req)
+  }
+  // let pagingData = setPagingData(req)
+
+  // let inputPages = pagingData.totalPages
+  // let inputlimit = pagingData.recordlimit
+  // let protocol = pagingData.protocol
+  // let host = pagingData.host
+  // let baseUrl = pagingData.baseUrl
+  // let path = pagingData.path
 
 
-  const pageMax = 50
-  const page = (inputPages) ? parseInt(inputPages) : 1
-  const limit = (inputlimit > pageMax) ? parseInt(inputlimit) : pageMax
-  const startIndex = (page - 1) * limit
-  const endIndex = page * limit
+  // const pageMax = 50
+  // const page = (inputPages) ? parseInt(inputPages) : 1
+  // const limit = (inputlimit > pageMax) ? parseInt(inputlimit) : pageMax
+  // const startIndex = (page - 1) * limit
+  // const endIndex = page * limit
 
   try {
     SQL=`SELECT * FROM ntt_recordings`
-    rows = await executeSql(SQL)
-    results = rows[0]
+    results = await executeSql(SQL)
+    paging.results = results[0]
+    // results = rows[0]
+    output = formatOutput(paging)
 
-    let data = {
-      "Total Results": results.length,
-      "Results per page": `${limit} - Max ${pageMax} results per page`,
-      next: "",
-      previous: "",
-      pages: Math.ceil(results.length/limit),
-      results: results.slice(startIndex, endIndex)
-    }
+    // let data = {
+    //   "Total Results": results.length,
+    //   "Results per page": `${limit} - Max ${pageMax} results per page`,
+    //   next: "",
+    //   previous: "",
+    //   pages: Math.ceil(results.length/limit),
+    //   results: results.slice(startIndex, endIndex)
+    // }
 
-    if (endIndex < results.length) {
-      // data.next = `${req.protocol}://${req.get('Host')}${req.baseUrl}${req.path}?page=${page + 1}&limit=${limit}`
-      data.next = `${protocol}://${host}${baseUrl}${path}?page=${page + 1}&limit=${limit}`
-    }
+    // if (endIndex < results.length) {
+    //   // data.next = `${req.protocol}://${req.get('Host')}${req.baseUrl}${req.path}?page=${page + 1}&limit=${limit}`
+    //   data.next = `${protocol}://${host}${baseUrl}${path}?page=${page + 1}&limit=${limit}`
+    // }
 
-    if (startIndex > 0) {
-      // data.previous = `${req.protocol}://${req.get('Host')}${req.baseUrl}${req.path}?page=${page - 1}&limit=${limit}`
-      data.previous = `${protocol}://${host}${baseUrl}${path}?page=${page - 1}&limit=${limit}`
-    }
+    // if (startIndex > 0) {
+    //   // data.previous = `${req.protocol}://${req.get('Host')}${req.baseUrl}${req.path}?page=${page - 1}&limit=${limit}`
+    //   data.previous = `${protocol}://${host}${baseUrl}${path}?page=${page - 1}&limit=${limit}`
+    // }
 
-    res.json(data)
+    // res.json(data)
+    res.json(output)
   } catch (error) {
     res.status(500).json({ error: error.message })
     console.log(error)
