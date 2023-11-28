@@ -14,21 +14,16 @@ async function executeSql(sql) {
 
 async function createEndpoint(input) {
   let results, output
-
   let paging = {
     pagingData: setPagingData(input.request)
   }
 
-  
   try {
     results = await executeSql(input.SQL)
     paging.results = results[0]
-    output = formatOutput(paging.results)
-    console.log(output)
-    // return output
-    // res.json(output)
+    output = formatOutput(paging)
   } catch (error) {
-    output = { resource: input.endpoint, error: error.message }
+    output = { function: "createEndpoint", resource: input.endpoint, error: error.message }
     console.log(output)
   } finally {
     return output
@@ -42,7 +37,8 @@ async function testTemplate(req, res) {
     request: req
   }
 
-  let endpoint = createEndpoint(endpointData)
+  let endpoint = await createEndpoint(endpointData)
+  console.log(endpoint)
   if (endpoint.error) {
     res.status(500).json(endpoint)
   } else {
@@ -51,22 +47,36 @@ async function testTemplate(req, res) {
 }
 
 const audioList = async (req, res) => {
-  let SQL, results, output
+  // let SQL, results, output
 
-  let paging = {
-    pagingData: setPagingData(req)
+  // let paging = {
+  //   pagingData: setPagingData(req)
+  // }
+
+  // try {
+  //   SQL=`SELECT * FROM ntt_recordings`
+  //   results = await executeSql(SQL)
+  //   paging.results = results[0]
+  //   output = formatOutput(paging)
+  //   res.json(output)
+  // } catch (error) {
+  //   res.status(500).json({ error: error.message })
+  //   console.log(error)
+  // }
+  let endpointData = {
+    endpoint: "/audio/all",
+    SQL: "SELECT * FROM ntt_recordings",
+    request: req
   }
 
-  try {
-    SQL=`SELECT * FROM ntt_recordings`
-    results = await executeSql(SQL)
-    paging.results = results[0]
-    output = formatOutput(paging)
-    res.json(output)
-  } catch (error) {
-    res.status(500).json({ error: error.message })
-    console.log(error)
+  let endpoint = await createEndpoint(endpointData)
+  
+  if (endpoint.error) {
+    res.status(500).json(endpoint)
+  } else {
+    res.json(endpoint)
   }
+
 }
 
 const recordingNumber = async (req, res) => {
@@ -322,19 +332,30 @@ async function topCalls(req, res) {
 }
 
 function setPagingData(input) {
+  let pages, limit
+  if (Object.keys(input.query).length > 0) {
+    pages = input.query.page
+    limit = input.query.limit
+  } else {
+    pages = 1
+    limit = 50
+  }
+
   return {
-    totalPages: input.query.page || 1,
-    recordlimit: input.query.limit || 50,
+    totalPages: pages,
+    recordlimit: limit,
     protocol: input.protocol,
     host: input.get('Host'),
     baseUrl: input.baseUrl,
     path: input.path
   }
+
+  // return data
 }
 
 function formatOutput(input) {
-  let inputPages = input.pagingData.totalPages
-  let inputlimit = input.pagingData.recordlimit
+  let inputPages = (input.pagingData.totalPages) ? input.pagingData.totalPages : 1
+  let inputlimit = (input.pagingData.recordlimit) ? input.pagingData.recordlimit : 50
   let protocol = input.pagingData.protocol
   let host = input.pagingData.host
   let baseUrl = input.pagingData.baseUrl
