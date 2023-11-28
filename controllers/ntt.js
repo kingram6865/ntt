@@ -15,14 +15,7 @@ async function executeSql(sql) {
 const audioList = async (req, res) => {
   let rows, results
   let pagingData = setPagingData(req)
-  console.log(pagingData)
 
-  // let inputPages = req.query.page
-  // let inputlimit = req.query.limit
-  // let protocol = req.protocol
-  // let host = req.get('Host')
-  // let baseUrl = req.baseUrl
-  // let path = req.path
   let inputPages = pagingData.totalPages
   let inputlimit = pagingData.recordlimit
   let protocol = pagingData.protocol
@@ -259,7 +252,13 @@ async function lecturesForYear(req, res) {
 }
 
 async function topCalls(req, res) {
-  let SQL, results, data
+  let SQL, results, output
+
+  let paging = {
+    pagingData: setPagingData(req)
+  }
+
+
   SQL = ` SELECT 
     objid,
     recording_id,
@@ -279,7 +278,11 @@ async function topCalls(req, res) {
   `
   try {
     results = await executeSql(SQL)
-    res.json(results[0])
+    paging.results = results[0]
+    output = formatOutput(paging)
+
+    // res.json(results[0])
+    res.json(output)
   } catch(error) {
     res.status(500).json({error: error.message})
     console.log(error)
@@ -298,32 +301,37 @@ function setPagingData(input) {
 }
 
 function formatOutput(input) {
-  let output, rows, results, inputPages, inputlimit
+  let inputPages = input.pagingData.totalPages
+  let inputlimit = input.pagingData.recordlimit
+  let protocol = input.pagingData.protocol
+  let host = input.pagingData.host
+  let baseUrl = input.pagingData.baseUrl
+  let path = input.pagingData.path
 
   const pageMax = 50
-  const page = (req.query.page) ? parseInt(req.query.page) : 1
-  const limit = (req.query.limit > pageMax) ? parseInt(req.query.limit) : pageMax
+  const page = (inputPages) ? parseInt(inputPages) : 1
+  const limit = (inputlimit > pageMax) ? parseInt(inputlimit) : pageMax
   const startIndex = (page - 1) * limit
   const endIndex = page * limit
   
   let data = {
-    "Total Results": results.length,
+    "Total Results": input.results.length,
     "Results per page": `${limit} - Max ${pageMax} results per page`,
     next: "",
     previous: "",
-    pages: Math.ceil(results.length/limit),
-    results: results.slice(startIndex, endIndex)
+    pages: Math.ceil(input.results.length/limit),
+    results: input.results.slice(startIndex, endIndex)
   }
 
-  if (endIndex < results.length) {
-    data.next = `${req.protocol}://${req.get('Host')}${req.baseUrl}${req.path}?page=${page + 1}&limit=${limit}`
+  if (endIndex < input.results.length) {
+    data.next = `${protocol}://${host}${baseUrl}${path}?page=${page + 1}&limit=${limit}`
   }
 
   if (startIndex > 0) {
-    data.previous = `${req.protocol}://${req.get('Host')}${req.baseUrl}${req.path}?page=${page - 1}&limit=${limit}`
+    data.previous = `${protocol}://${host}${baseUrl}${path}?page=${page - 1}&limit=${limit}`
   }
 
-  return output
+  return data
 }
 
 module.exports = {
@@ -338,9 +346,3 @@ module.exports = {
   lecturesForYear,
   topCalls
 }
-
-// async function execute() {
-//   let result = topCalls('a', 'data')
-// }
-
-// execute()
